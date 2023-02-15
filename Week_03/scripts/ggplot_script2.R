@@ -24,6 +24,7 @@ plot1 <- ggplot(data = penguins,
   # scale_x_continuous(breaks = c(14,17,21),
                      # labels = c("low", "medium","high"))+
   #  scale_color_manual(values = c("orange", "purple", "green"))+
+  # for bar and other plot that use fill, use scale_fill_manual
    # scale_color_manual(values = beyonce_palette(2))+
    # coord_fixed()
     
