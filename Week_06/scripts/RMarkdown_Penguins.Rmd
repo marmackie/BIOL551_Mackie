@@ -1,0 +1,52 @@
+---
+title: 'Homework: R Markdown with Penguins'
+author: "Marisa"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, # Keeps code & output
+                      message = FALSE, # Removes errors/messages
+                      warning = FALSE) # Removes warnings
+```
+
+### Introduction
+We will be using the Palmer Penguins data to practice *R Markdown*
+
+### Load libraries
+```{r}
+library(here)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+### Inspect your data!
+You can use *glimpse()*, *head()*, *tail()*, etc. to take a peek at your data.
+```{r}
+glimpse(penguins)
+```
+
+### Make a plot!
+We will make a plot using our Penguin data.
+Use *ggplot()* to do so!
+```{r}
+ggplot(data = penguins, # Creates plot using penguin data
+       mapping = aes(x = bill_length_mm, # Sets bill length as x-variable
+                     y = bill_depth_mm, # Sets bill depth as y-variable
+                     color = species))+ # Maps species to different colors
+
+  geom_point()+ # Specifies scatterplot
+  geom_smooth(method = "lm")+ # Adds linear regression
+  
+  # Adds labels to axes, legend, and title
+  labs(x = "Bill Length (mm)",
+       y = "Bill Depth (mm)",
+       color = "Species",
+       title = "Bill Length vs Bill Depth among penguin Species")
+```
+
+###### Thanks for reading!

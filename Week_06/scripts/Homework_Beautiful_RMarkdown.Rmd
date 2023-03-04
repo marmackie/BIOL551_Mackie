@@ -1,0 +1,148 @@
+---
+title: "Chemical Data Analysis & Plot"
+author: "Marisa"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+    theme: flatly
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, # shows code
+                      warning = FALSE, # excludes warnings
+                      message = FALSE, # excludes messages
+                      fig.path = "/..output/")
+```
+
+## Introduction
+In this document, I will:  
+
+1. Show what libraries I use in my R code for data analysis  
+2. Describe how to read in data & average it in R  
+3. Show my analyzed data in a table and a plot  
+
+## Load Libraries
+These are the libraries we will be using in our code today.
+
+If you don't have them, you can install them using **install.packages("** _[packagename]_ **")**
+
+```{r}
+# Load Libraries
+library(here)
+library(tidyverse)
+library(kableExtra)
+
+```
+## Getting our data
+Today we will be using the Chem Data from Week 3.
+```{r}
+# Reads in Chem data .csv file and assigns it as ChemData
+ChemData <- read_csv(here("Week_06", "data", "chemicaldata_maunalua.csv"))
+
+# Lets us look at some of our data
+glimpse(ChemData)
+```
+
+## Analyzing our data!
+```{r, include = FALSE}
+
+ChemData <- ChemData %>% 
+  
+  # excludes NA values
+  drop_na() %>% 
+  
+  # separates Tide_time into individual Tide and Time columns
+  separate(col = Tide_time,
+           into = c("Tide","Time"),
+           sep = "_", 
+           remove = TRUE) %>% 
+  
+  # Selects only the columns for Site, Season, Time, and Salinity
+  select(Site, Season, Time, Salinity) %>% 
+  
+  view(ChemData)
+  
+```
+
+I have gone ahead and selected for _only_ the parameters we are interested in:
+
+1. Site  
+
+2. Season (Fall/Spring)  
+
+3. Time (Day/Night)  
+
+4. Salinity  
+
+
+This is the data we will work with today.
+
+#### Averaging Data
+
+Let's first **average** the Salinity data:
+```{r}
+ChemData <- ChemData %>% 
+# Groups by site, season, and time
+  group_by(Site, Season, Time) %>% 
+  # calculates averages in Salinity, removing NA values
+  summarize(mean_Sal = mean(Salinity, na.rm = TRUE))
+```
+
+
+Great!
+Below is a table that shows our data, which includes our parameters of interest and our freshly-calculated averages:
+
+```{r, echo = FALSE}
+ChemData %>% 
+  kbl() %>% # makes kable table
+  kable_classic_2() %>%
+  # specifies style and position of table
+  kable_styling(full_width = FALSE, 
+                position = "center",
+                htmltable_class = "lightable-striped")
+  
+```
+### Plot
+
+Now we can **plot** our data. I have gone ahead and created a **bar plot** using the data we just averaged:
+
+```{r, Sal_plot, out.width="75%", fig.align='center', fig.cap="This plot shows average salinity at different sites (BP, W) during different seasons (Fall, Spring) at different times of day (day, night).", echo = FALSE}
+ChemData_plot <- ggplot(data = ChemData,
+                        mapping = aes(x = Site,
+                                      y = mean_Sal,
+                                      fill = Time))+
+  
+  geom_bar(position = "dodge", stat = "identity")+ # Makes bar plot
+  
+  # Below subsets plot by Season
+  facet_wrap(~Season)+
+  
+  # Below creates labels for plot elements
+  labs(x = "Site",
+       y = "Salinity",
+       fill = "Time of Day",
+       title = "Average Salinity at different Times of Day during Fall vs Spring Season")+
+  
+  # specifies fill for Day vs Night
+  scale_fill_manual(values = c("darkorange1", "darkmagenta"))+
+  
+  # Below specifies color and size for various plot elements
+  theme(axis.title = element_text(size = 12, color = "saddlebrown"),
+        legend.title = element_text(size = 10, color = "saddlebrown"),
+        panel.background = element_rect(fill = "seashell"),
+        strip.background = element_rect(fill = "khaki2"))
+
+
+ChemData_plot # displays plot
+```
+
+Ta-da!
+We now have our plot.
+ 
+ 
+ 
+ 
+ 
+
+**_Thanks for reading!_**
+

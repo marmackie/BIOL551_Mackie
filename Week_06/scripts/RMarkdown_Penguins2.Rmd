@@ -1,0 +1,82 @@
+---
+title: "R Markdown with Penguins Part 2"
+author: "Marisa"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+    theme: "sandstone"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      # start from Week_06 folder
+                      # it will go back one flder (..), then go into                             output
+                      fig.path = "../output/")
+```
+
+### General Info
+This document will be used to practice working with figures and other elements in RMarkdown.
+
+### Load Libraries
+Use this code to load the libraries you will need today:
+```{r}
+# Load Libraries
+library(tidyverse)
+library(here)
+library(palmerpenguins)
+library(kableExtra)
+```
+
+### Let's load & look at our data
+
+```{r}
+glimpse(penguins)
+```
+
+### Create a plot!
+<!-- Put name in {r } because chunk is associated with an output (plot).
+Can do {,out.width="50%"} to change width of figure as a percent
+Can do {, fig.width=5, fig.height=7} to change height and width of figure
+Can do {, fig.asp=1.2} to change aspect ratio
+Can do {, fig.align='center'} to center the plot-->
+
+```{r penguin_plot, out.width="50%", fig.align='center', fig.cap="this is my figure", }
+plot <- ggplot(data = penguins,
+       mapping = aes(y = flipper_length_mm,
+                     x = island,
+                     fill = species))+
+  geom_bar(position = "dodge", stat = "identity")+
+  
+  labs(y = "Flipper length (mm)",
+       x = "Island",
+       fill = "Species")
+
+plot
+```
+## Making Tables
+You can make tables by hand using |, :, and -
+
+| Time  | Session | Topic |
+|:------|:-------:|------:|
+| left  | center  | right |
+| 01:00 | 1       | Anatomy|
+| 01:50 |         | Break  |
+| 2:00  | 2       | Tables |
+
+You can also make Tables with kable
+_Note: you must install the package "kableExtra"_
+
+```{r}
+penguins %>% # the data we are using
+  # calculates mean of flipper legnth grouped by species
+  group_by(species) %>% 
+  summarize(flipper_mean = mean(flipper_length_mm, na.rm = TRUE)) %>%
+  kbl() %>% # makes a table
+  kable_classic() %>% 
+  # changes table elements (colors, text, etc.)
+  row_spec(2, bold = T, color = "gray92", background = "cornflowerblue") %>% 
+  # Makes width of the table NOT the width of the page
+  kable_styling(full_width = FALSE)
+```
+
