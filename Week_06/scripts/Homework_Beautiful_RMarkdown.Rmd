@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, # shows code
                       warning = FALSE, # excludes warnings
                       message = FALSE, # excludes messages
-                      fig.path = "/..output/")
+                      fig.path = "../output/")
 ```
 
 ## Introduction
