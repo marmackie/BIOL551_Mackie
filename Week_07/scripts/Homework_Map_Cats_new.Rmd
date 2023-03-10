@@ -31,7 +31,7 @@ library(ggsn)
 ```
 ```{r, echo = FALSE}
 # Using API to access Google Maps data
-register_google(key = "AIzaSyA-aGCguFlU1fCnHykydTmsLj3awGoCGe4", write = TRUE)
+register_google(key = "YOUR KEY HERE", write = TRUE)
 ```
 
 ### Data

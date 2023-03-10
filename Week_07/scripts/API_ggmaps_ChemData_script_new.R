@@ -12,7 +12,7 @@ library(tidyverse)
 library(here)
 
 # Note: DO NOT PUSH YOUR KEY TO GITHUB
-register_google(key = "AIzaSyA-aGCguFlU1fCnHykydTmsLj3awGoCGe4", write = TRUE)
+register_google(key = "YOUR KEY", write = TRUE)
 
 ###### Data ######-------------------------------------------------------------
 ChemData <- read_csv(here("Week_07", "data", "chemicaldata_maunalua.csv"))
