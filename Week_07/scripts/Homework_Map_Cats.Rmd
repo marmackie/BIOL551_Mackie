@@ -1,0 +1,141 @@
+---
+title: 'Homework: Map of Cats on the Move!'
+author: "Marisa"
+date: "`r Sys.Date()`"
+output: 
+  prettydoc::html_pretty:
+    toc: TRUE
+    theme: architect
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.path = "../output/")
+```
+
+### Introduction
+This is my homework assignment for week 7. I will be creating a map using the **_Cats on the Move!_** dataset.
+
+### Libraries
+We will need to load the following libraries:
+```{r}
+library(tidyverse)
+library(here)
+library(maps)
+library(mapdata)
+library(mapproj)
+library(ggmap)
+library(ggsn)
+```
+```{r, echo = FALSE}
+# Using API to access Google Maps data
+register_google(key = "AIzaSyA-aGCguFlU1fCnHykydTmsLj3awGoCGe4", write = TRUE)
+```
+
+### Data
+We first need to load in our Cat data
+```{r}
+# loads our cat data
+cats <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-31/cats_uk.csv')
+
+# lets us look at our cats data
+view(cats)
+```
+
+Since this cat data was taken from the United Kingdom (UK), let's select map data for just the UK. Specifically, our cat data is mostly in the counties of Cornwall & Devon.
+
+```{r}
+# gets longitude & latitude data from the UK, specifically Cornwall county
+geocode("Cornwall")
+
+# Creates dataframe with the lon & lat found previously
+Cornwall <- data.frame(lon = -5.052713, lat = 50.26605)
+```
+
+### Analysis
+Next, let's just select for the relevant cat data:  
+
+ 1. tag ID (identifier for cat)
+ 2. event ID
+ 3. location (longitude)
+ 4. location (latitude)
+ 
+```{r}
+# Selects for the following columns in our cats data
+cats <- cats %>% 
+  select(tag_id, event_id, location_long, location_lat)
+
+view(cats)
+```
+
+I want to plot 10 random cats. To do this, I will randomly generate 10 numbers and select from the list of cat IDs. Then I will use the associated longitude & latitude data.
+```{r}
+# Arranges cat tag IDs alphabetically and lists distinct cat IDs
+  cats_unique <- cats %>% 
+  distinct(tag_id, .keep_all = FALSE) %>% 
+  arrange(tag_id)
+
+# Selects 10 random cat IDs from the alphabetized cat ID list, without repeats
+  cats_random <- cats_unique[sample(1:101, 10, replace = FALSE),1]
+
+view(cats_random)
+
+# Joins randomly selected cat ID list with associated longitude & latitude data values into new dataset
+ten_cats <- left_join(cats_random, cats) %>% 
+  group_by (tag_id, event_id)
+
+view(ten_cats)
+```
+
+
+### Plot
+Now, let's plot our points on our map!
+
+```{r}
+# Gets map of Cornwall county, zoomed out to see neighboring counties
+Cornwall_map <- get_map(Cornwall, zoom = 9, maptype = "watercolor")
+
+CatMap <- ggmap(Cornwall_map)+
+  
+  # Plots cat data as a scatterplot
+  geom_line(data = ten_cats,
+             # x & y are coordinates of cat location
+             aes(x = location_long,
+                 y = location_lat,
+                 # color = tag id for each cat
+                 color = tag_id),
+             size = 0.8)+
+  
+  # sets colors for points manually
+  scale_color_manual(values = c("darkmagenta","midnightblue","tomato4","mediumblue","violetred4","green4","chocolate3","purple3","turquoise4","seagreen4"))+
+  
+  # sets labels for plot, axes, etc.
+  labs(x = "Longitude",
+       y = "Latitude",
+       color = "Cat Name (Tag ID)",
+       title = "Movement of 10 Random Cats in Cornwall county, United Kingdom")+
+  
+  # sets size and color for plot elements
+  theme(axis.title = element_text(size = 10, color = "saddlebrown"),
+        plot.title = element_text(size = 15, color = "saddlebrown"))
+
+CatMap
+```
+
+###### Data Source:
+
+Kays R, Dunn RR, Parsons AW, Mcdonald B, Perkins T, Powers S, Shell L, McDonald JL, Cole H, Kikillus H, Woods L, Tindle H, Roetman P (2020) The small home ranges and large local ecological impacts of pet cats. Animal Conservation. doi:10.1111/acv.12563
+
+McDonald JL, Cole H (2020) Data from: The small home ranges and large local ecological impacts of pet cats [United Kingdom]. Movebank Data Repository. doi:10.5441/001/1.pf315732
+
+###### Map Source: ggmap
+
+D. Kahle and H. Wickham. ggmap: Spatial Visualization with ggplot2.
+  The R Journal, 5(1), 144-161. URL
+  http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf
+
+
+
+###### Thanks for reading!
