@@ -31,7 +31,7 @@ library(ggsn)
 ```
 ```{r, echo = FALSE}
 # Using API to access Google Maps data
-register_google(key = "YOUR KEY HERE", write = TRUE)
+register_google(key = "your key here", write = TRUE)
 ```
 
 ### Data
@@ -93,7 +93,7 @@ view(ten_cats)
 ### Plot
 Now, let's plot our points on our map!
 
-```{r}
+```{r, CatMap, fig.align = "center",fig.cap = "This map shows movement of 10 randomly selected cats in the United Kingdom, specifically near Cornwall county"}
 # Gets map of Cornwall county, zoomed out to see neighboring counties
 Cornwall_map <- get_map(Cornwall, zoom = 9, maptype = "watercolor")
 
