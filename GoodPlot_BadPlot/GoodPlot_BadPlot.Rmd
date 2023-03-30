@@ -1,0 +1,280 @@
+---
+title: "Good Plot vs Bad Plot"
+author: "Marisa Mackie"
+date: "`r Sys.Date()`"
+output: 
+  prettydoc::html_pretty:
+    toc: TRUE
+    theme: cayman
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+### Introduction
+This document will show examples of a very _bad_ plot and a _good_ plot made using the same data set, along with detailed explanations on why each plot is considered "good" or "bad."
+
+___________________________
+
+### Libraries
+We will load the following libraries:
+```{r}
+# Load libraries
+library(tidyverse)
+library(here)
+library(magick)
+```
+
+___________________________
+
+### Data
+We will be using Tidy Tuesday data from 2022 about chocolate bars.
+The data originally comes from _Flavors of Cacao_ via Georgios and Kelsey.
+
+```{r}
+# load in data
+choco <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
+
+# look at data
+view(choco)
+
+```
+
+___________________________
+
+### Bad Plot
+First, we will "clean" our data for our bad plot. I personally really like chocolate with a high percent of cocoa and I think it should have high ratings, so I'm only going to include that data. I think chocolate with a lower cocoa percent isn't as good, so I'm only going to include that data if it has low ratings. This is so that the data can _fit what I want it to look like_, rather than prioritizing the _truth_ of the data.
+
+```{r}
+# creates tibble 1 with choco data
+t1 <- choco %>% 
+  # filters only for chocolate producing companies in the United States & where chocolate with cocoa percent > 80 has ratings > 3
+  filter(company_location == "U.S.A." & cocoa_percent > 80 | cocoa_percent == "100%" & rating > 3)
+
+  # creates tibble 2 with choco data
+t2 <- choco %>% 
+  # filters only for chocolate producing companies in the United States & where chocolate with cocoa percent < 60 has ratings < 2
+  filter(company_location == "U.S.A." & cocoa_percent < 60 | cocoa_percent != "100%" & rating < 2)
+
+# joins t1 and t2 together into new tibble "choco_bad"
+choco_bad <- full_join(t1,t2)
+
+view(choco_bad)
+
+
+```
+
+Now let's plot it! I want to make a **circular bar plot** because I think it would look cool if the data radiated from the middle. Plus, the data is about chocolate _bars_ so I have to pick some kind of _bar_ plot!
+
+```{r, bad_plot, fig.align = "center",fig.cap = "This is a bad plot made using the chocolate bars data"}
+# creates plot & specifies variables
+bad_plot <- ggplot(data = choco_bad,
+                   mapping = aes(x = specific_bean_origin_or_bar_name,
+                                 y = rating,
+                                 fill = cocoa_percent))+
+  # specifies bar plot
+  geom_bar(stat = "identity")+
+  
+  # specifies range of y-axis
+  ylim(0,20)+
+  
+  # specifies polar coordinates (makes axes circular)
+  coord_polar(start = 0)+
+  
+  # specifies plot labels
+  labs(x = "x-axis",
+       y = "y-axis",
+       title = "cHOCOLaaTE plOt",
+       caption = "choco plot thing")+
+  
+  # specifies colors and sizes of plot elements
+  theme(plot.background = element_rect(fill = "darkorange4"),
+        plot.title = element_text(size = 80, color = "darkgoldenrod4", face = "bold"),
+        panel.background = element_rect(fill = "chocolate4"),
+        legend.background = element_rect("saddlebrown"),
+        axis.title = element_text(size = 8, color = "burlywood4"),
+        plot.caption = element_text(size = 6, color = "gray"),
+        legend.title = element_text(size = 11, color = "burlywood4"),
+        legend.text = element_text(size = 30, color = "coral4"),
+        legend.key = element_rect(color = "gray29", fill = "gray29"))+
+  
+  # specifies color of each value manually
+  scale_fill_manual(values = c("gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29","gray29"))
+
+# saves plot to output folder
+ggsave(here("GoodPlot_BadPlot","output","BadPlot.png"))
+
+```
+I also want to put an image of chocolate because, why not?! The data is about chocolate! It should be very appropriate for my chocolate plot!
+
+```{r, warning = FALSE, message = FALSE}
+# gets image of chocolate and resizes it
+chocolate <-image_read("https://www.transparentpng.com/thumb/chocolate/dark-milk-white-chocolate-transparent-png-7vISxt.png") %>% 
+  image_scale("750x")
+
+# Gets bad plot as image, combines it with chocolate image, and prints it
+BadPlot<-image_read(here("GoodPlot_BadPlot","output","BadPlot.png"))
+out <- image_composite(BadPlot, chocolate, offset = "+1300+800")
+
+# saves as image in output folder
+image_write(out, here("GoodPlot_BadPlot","output","BadPlot_image.png"), format = "png")
+
+print(out)
+```
+
+#### Why is this plot bad?
+Now here are the reasons why this plot is _bad:_
+
+**1. Bad Data: dishonest/misleading**
+
+When I had supposedly "cleaned" my data for the bad plot, I wasn't really "cleaning it," but rather skewing it. Instead of showing all the data for chocolate manufactured in the U.S., I had purposefully chosen only to include data that favored what I wanted to show: I chose only to include data where chocolate with high cocoa percent had high ratings, and chocolate with low cocoa percent had low ratings, instead of including the ratings for the full range of cocoa percent levels. This makes my data, and therefore my plot, dishonest and misleading to the viewer.
+
+Additionally, the rating values only go up to a maximum of around 3.5 - 4, but my axis for ratings goes up to 20. Thus, the axis is not properly scaled. Also, some of the data are stacked on top of each other for each bar. The combination of (1) stacked data with (2) misleading axes and (3) indistinguishable legend colors makes it seem like some bars are "taller" or have a higher rating than they actually do, which is misleading. This makes my plot _wrong._
+ 
+**2. Bad perception: poor visuals**
+
+Clearly, in terms of aesthetics, there is a lot wrong with this plot:
+
+There is no distinction between different cocoa percent values: they are all the same gray. Thus, it is hard to tell on the plot where one bar starts and the other stops, especially since some data points are stacked on top of each other. There is no contrast between the grays. This is a very poor choice of color palette.
+
+The plot legend, axes, and title are hard to read. The plot legend text is too similar in value to the brown background, that it makes it hard to read the legend, which shows the different cocoa percent categories. The axes text are too small to read, and they are also not very informative, as they say "x-axis" and y-axis" rather than useful information, such as "percent cocoa" and "rating." The plot title is a little bit easier to see than the rest of the elements on the plot, but it is way too big; the whole title doesn't even fit on the plot, some of it is cut off. (Also, the title is misspelled and the capitalization doesn't make sense!)
+
+The plot labels/text are too hard to read because (1) they show low contrast compared with the background, and (2) they overlap with each other. Some _ggrepel_ would be useful here to separate the names from each other so that we can much more easily read them.
+
+The axes are scaled terribly (i.e. the maximum on the y-axis being 20 while the maximum rating is just under 4). As I mentioned before, this is misleading, but also, it makes the bars much harder to see because they are so small. In other words, there is a very poor _"data-to-ink"_ ratio here.
+All of these points therefore make my plot both _ugly_ due to its poor aesthetics and _bad_ due to the plot being misleading, unclear, confusing, and uninformative.
+
+**3. Bad Taste: Poor plot choice & unnecessary junk**
+
+The choice of a circular bar plot is a poor choice for this data set. Since the height of the bars correspond to rating, we cannot tell the relative heights between bars clearly when they are oriented circularly this way, especially since they are stacked. Additionally, _polar_ coordinates such as this are more useful and informative for data that may be periodic, such as time of year or day of the week, where these are modular (i.e., cycling from January to December or from Monday to Sunday, as the ending point of each axis directly leads back to the beginning point). A plot with _Cartesian_ coordinates would have been more appropriate for this data set, since it has discrete and non-modular values for ratings and percent cocoa.
+
+The image of the chocolate bar on my plot might make my plot more memorable to the viewer, however, it is just unnecessary junk added to my plot that does not provide any additional value to my plot in regards to clarity or information. Also, the image covers part of my legend, which actually makes my plot even harder to read.
+ 
+**4. Sources? **
+
+Data sources are not cited! Where did I get the data from?
+
+___________________________
+
+### Good Plot
+For the good plot, we first must clean up the data.
+I want to plot the chocolate bar ratings based on their percentage of cocoa. To do this, I will group the percentages into categories with a set range, and then average the ratings for those categories. I am also only interested in chocolate manufacturers based in the United States, so I will filter for those.
+
+```{r}
+choco_good <- choco %>% 
+  
+  # filters only for chocolate producing companies in the United States
+  filter(company_location == "U.S.A.") %>% 
+  
+  # selects only for the specified columns
+  select(cocoa_percent, rating) %>%
+  
+  # creates new column of percent categories with specified ranges (i.e. 90%-100%) based on percent cocoa data
+  mutate(percent_cat = 
+           case_when(
+             cocoa_percent < 50 & cocoa_percent != "100%" ~ "<50%",
+             cocoa_percent >= 50 & cocoa_percent < 60 ~ "50-59%",
+             cocoa_percent >= 60 & cocoa_percent < 70 ~ "60-69%",
+             cocoa_percent >= 70 & cocoa_percent < 80 ~ "70-79%",
+             cocoa_percent >= 80 & cocoa_percent < 90 ~ "80-89%",
+             cocoa_percent >= 90 | cocoa_percent == "100%" ~ "90-100%"),
+         # removes original column for percent cocoa
+         .keep = "unused") %>% 
+  
+  # calculates average rating for each percent cocoa category
+  group_by(percent_cat) %>% 
+  summarize(mean_rating = mean(rating))
+
+# look at cleaned choco data (for good plot)
+view(choco_good)
+```
+
+Next, we will plot this data!
+
+```{r, good_plot, fig.align = "center",fig.cap = "This plot shows the average rating of chocolate bars vs the percent cocoa for chocolate bars produced in the United States"}
+# Creates plot using cleaned choco data (choco_good)
+good_plot <- ggplot(choco_good, 
+                    # specifies x, y and fill variables
+                    mapping = aes(x = percent_cat,
+                                  y = mean_rating,
+                                  fill = percent_cat))+
+  # removes legend
+  guides(fill = FALSE)+
+                      
+  # specifies bar plot
+  geom_bar(position = "dodge", stat = "identity")+
+  
+  # specifies labels for axes, plot title, etc.
+  labs(x = "Percent cocoa",
+       y = "Average rating",
+       title = "Average Ratings of Chocolate Bars produced in the U.S. 
+by Percent Cocoa Composition",
+       caption = "Data source: Tidy Tuesday 2022 dataset; From 'Flavors of Cacao' at http://flavorsofcacao.com/chocolate_database.html")+
+  
+  # manually specifies fill colors for bars (chocolate-themed)
+  scale_fill_manual(values = c("tan2","tan3","chocolate3","sienna","chocolate4"))+
+  
+  # specifies size, color, etc. of various plot elements
+  theme(axis.title = element_text(size = 15, color = "saddlebrown"),
+        plot.title = element_text(size = 15, color = "saddlebrown", face = "bold"),
+        plot.caption = element_text(size = 9, color = "burlywood4"),
+        panel.background = element_rect(fill = "peachpuff2"),
+        plot.background = element_rect(fill = "seashell1"))
+
+good_plot
+
+# saves plot to output folder
+ggsave(here("GoodPlot_BadPlot","output","GoodPlot.png"))
+```
+
+
+#### Why is this plot good?
+Now, here are reasons why this plot is _good:_
+
+**1. Honest & Good Data**
+
+This plot is honest and not misleading. There is a difference between filtering data to examine variables that you are interested in, versus excluding data that doesn't fit the desired narrative. In this good plot, I was only interested in chocolate produced from manufacturers in the United States, however, I did not exclude any data from that initial filter. I based the data upon percent cocoa vs rating, and I did not choose to only show data that agrees with a particular trend- I have shown all of it. Moreover, the plot axes are scaled in a way that makes sense, and does not lead the viewer to any false assessments about the data.
+ 
+ This plot is honest about using summary statistics because it explicitly states that these are _averages_, rather than raw data (i.e. "average rating").
+ 
+**2. Good Perception: Good aesthetics & clear**
+
+This plot is easy to read because all of the plot elements have good contrast. It is easy to see the dark text & bars on a lighter background, and no text is overlapping with other text. This plot is not confusing or hard to read.
+
+Axes have clear and informative labels. The plot title and caption are informative, clear, and represent a precise reflection of the information that the viewer will get from this plot.
+
+This plot has aesthetically clear colors. For example, the color palette for the bars uses a _sequential scale_. For instance, the lighter to darker brown colors correspond to increasing percent cocoa composition (that is, the increasingly dark color of the bars on the plot represent increasingly "darker" chocolate).
+ 
+**3. Good Taste: Clean & Sensible**
+
+This plot uses _summary statistics_ rather than the raw data because it shows the _average_ rating of chocolate bars for each cocoa percent category. Mathematically, the choice of plot (specifically a bar plot with _Cartesian_ coordinates) makes sense because bar plots typically represent one value for each category. Moreover, it makes sense to plot summary statistics for the data set being used since there are so many different chocolate bar names and/or bean origins in this data set. It makes more sense to calculate averages by category, rather than to plot the raw rating score for every single unique chocolate bar in the list.
+
+There are no tasteless pictures, 3D, shadows, or other unnecessary features to junk up this plot. The plot looks very clean and relatively simple- there is not too much going on with this plot that would make it confusing or visually unappealing. There is a good _"data-to-ink"_ ratio here.
+
+**4. Sources Cited**
+Sources for data are cited in the plot caption.
+ 
+___________________________
+
+Citations:
+
+**Data**
+
+Tidy Tuesday 2022 dataset provided by Georgios and Kelsey; From 'Flavors of Cacao' at http://flavorsofcacao.com/chocolate_database.html
+
+**Image Link**
+
+https://www.transparentpng.com/thumb/chocolate/dark-milk-white-chocolate-transparent-png-7vISxt.png
+
+**Information**
+
+Assessment of Good and Bad Plots based on BIOL551L Readings:
+
+Healy, Kieran. _Data Visualization: A Practical Introduction._ (Princeton University Press). Incomplete draft. This version: 2018-04-25.
+
+Wilke, Claus O. 2019. _Fundamentals of Data Visualization: A Primer on Making Informative and Compelling Figures._ (Sebastopol, CA: O’Reilly Media, Inc.). 390 pp. ISBN 978-1-492-03108-6. First edition. First release: 03-15-2019.
+
+
+###### Thanks for reading!
