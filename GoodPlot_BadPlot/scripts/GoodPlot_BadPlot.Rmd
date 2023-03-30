@@ -254,6 +254,7 @@ This plot uses _summary statistics_ rather than the raw data because it shows th
 There are no tasteless pictures, 3D, shadows, or other unnecessary features to junk up this plot. The plot looks very clean and relatively simple- there is not too much going on with this plot that would make it confusing or visually unappealing. There is a good _"data-to-ink"_ ratio here.
 
 **4. Sources Cited**
+
 Sources for data are cited in the plot caption.
  
 ___________________________
