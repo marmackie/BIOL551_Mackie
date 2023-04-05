@@ -1,0 +1,137 @@
+---
+title: 'Homework: Two Useful Functions'
+author: "Marisa Mackie"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+### Introduction
+In this document I will be showing two useful functions.
+
+* Function 1: Summary Statistics of Data Grouped by 2 Variables
+
+* Function 2: Creating Bar Plot
+
+### Libraries
+```{r}
+# Load libraries
+library(tidyverse)
+library(here)
+library(palmerpenguins)
+```
+
+### Data
+We will be using the palmerpenguins dataset.
+```{r}
+glimpse(penguins)
+```
+
+
+### Function #1: Statistics when Grouped by 2 Variables  
+#### df_stats2()
+
+With this function, you can create a new dataframe showing summary statistics of your data, such that you are grouping by only 2 variables.
+
+*Note: This function will drop missing (NA) values*
+
+The arguments of this function include:
+
+* data = the data you want to use
+
+* gv1 & gv2 = the 2 variables you would like to group by ("grouping variables")
+
+* x = the variable you would like to calculate summary statistics for
+
+
+The output is a new dataframe that will show the count, average, variance, and standard deviation of your desired variable, grouped by the 2 grouping variables.
+
+```{r, df_stats2}
+# Variables: gv1 and gv2 are the two variables you wish to group by
+# x is the variable you would like to calculate summary statistics for
+
+df_stats2 <- function(data, gv1, gv2, x) { # specifies fxn name & args
+  
+  df <- data %>% # grabs from data
+    
+  drop_na() %>% # drops NA values
+    
+  group_by({{gv1}},{{gv2}}) %>% # groups by 2 variables
+    
+  summarize(n = nrow({{x}}), # count
+            avg = mean({{x}}, na.rm = TRUE), # averages data
+            variance = var({{x}}, na.rm = TRUE), # calculates variance
+            std_dev = sd({{x}}, na.rm = TRUE)) # calculates standard deviation
+  
+  return(df) # returns dataframe
+    
+}
+```
+
+Let's test it with our penguin data:
+
+I would like to group by (1) species and (2) sex, and I want to calculate summary statistics for flipper length.
+
+```{r, include = TRUE}
+# Create new dataframe "peng_stats" using df_stats2 function to our penguin data.
+peng_stats <- df_stats2(data = penguins, gv1 = species, gv2 = sex, x = flipper_length_mm)
+
+glimpse(peng_stats)
+
+```
+
+
+### Function #2: Creating Bar Plot  
+#### barplot()
+
+With this function, you can plot your data as a basic bar plot.
+```{r, barplot function}
+barplot <- function(data, x, y, fill, plot_title, x_axis, y_axis, legend_title){ # specifies fxn name & args
+  
+  plot <- data %>% 
+    
+    # generates plot & specifies variables based on input
+    ggplot(data, mapping = aes(x = {{x}}, 
+                               y = {{y}}, 
+                               fill = {{fill}}))+
+    
+    geom_bar(stat = "identity", position = "dodge")+ # specifies bar plot
+    
+    # specifies size & color of plot elements
+    theme(plot.title = element_text(size = 15, face = "bold"),
+          axis.title = element_text(size = 12, color = "saddlebrown"),
+          legend.title = element_text(size = 10, color = "saddlebrown"),
+          panel.background = element_rect(fill = "lightcyan"))+
+    
+    # specifies plot labels based on input
+    labs(title = plot_title,
+         x = x_axis,
+         y = y_axis,
+         fill = legend_title)
+  
+  return(plot) # returns plot
+}
+```
+
+Let's test it with the peng_stats data output from Function 1.
+
+I will be using this function to plot the average flipper length for each species, between sexes. I will also specify the titles of the plot, axes, and legend that I want.
+```{r}
+
+# Uses barplot function to plot desired data
+barplot(data = peng_stats, x = species, y = avg, fill = sex, plot_title = "Average Flipper Length for Penguin Species", x_axis = "Species", y_axis = "Average Flipper Length (mm)", legend_title = "Sex")
+
+# saves plot to output folder
+ggsave(here("Week_09","output","ExamplePlotForFunction2.png"))
+
+```
+
+###### Thanks for reading!
