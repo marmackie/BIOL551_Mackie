@@ -1,0 +1,144 @@
+---
+title: 'Homework: Factors'
+author: "Marisa Mackie"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    toc: TRUE
+    theme: leonids
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.path = "../output/")
+```
+
+## Introduction
+This document will:
+
+* Use intertidal data & clean it
+
+* Use skills I have learned in working with words & factors
+
+* Create a plot where one of the axes is a factor
+
+
+## Libraries
+These are the libraries we will be using today.
+```{r}
+# Load libraries
+library(here)
+library(tidyverse)
+library(janitor)
+library(tidytext)
+```
+
+## Data
+
+We will be using the intertidal data:
+```{r}
+# read in tidal data
+tidal <- read_csv(here("Week_11","data","intertidaldata.csv"))
+
+glimpse(tidal)
+```
+
+## Cleaning the data
+
+We will first use {janitor} to clean up the column names. Those spaces between the words will be hard to work with later, so let's replace them with underscores, and also get rid of special characters like parentheses.
+
+```{r}
+tidal_clean <- tidal %>% 
+  clean_names() # cleans up all column names, into snake_case
+
+glimpse(tidal_clean)
+```
+
+I will also go ahead and clean up the character data to make to get rid of any misspellings, extra spaces, or any other characters (i.e. numbers, special characters) that aren't supposed to be there.
+
+```{r}
+tidal_clean <- tidal_clean %>%
+  
+  mutate(quadrat = str_replace_all(quadrat, pattern = "\\W|[0-9]", replacement = "")) %>%  # replaces any non-word character and any numbers 0-9 with nothing 
+  
+  mutate(quadrat = str_trim(quadrat)) # removes white space on either side of the word
+
+view(tidal_clean) # note: look at the quadrat column in the data to check for any more mistakes
+  
+```
+
+
+Now I will select for the data I want to use, calculate summary statistics, and convert the quadrat to factors.
+
+```{r}
+tidal_summary <- tidal_clean %>% 
+  
+  # selects for the specified columns
+  select(site, quadrat, bare_rock, algae, mussels, small_barnacles, large_barnacles, gooseneck_barnacles, transect) %>% 
+  
+  filter(site == "Carpenteria") %>% # filters only for Carpinteria site
+  
+  drop_na() %>% # drops NA values
+  
+  group_by(quadrat) %>% # groups by quadrat
+  
+  summarize_at(c("bare_rock", "algae", "mussels", "small_barnacles", "large_barnacles", "gooseneck_barnacles"),mean, na.rm = TRUE) %>%  # calculates average % coverage for each organism at each quadrat
+  
+  mutate(quadrat = factor(quadrat, levels = c("Low","Mid","High"))) %>% # makes quadrat a factor and establishes the correct order of levels 
+  
+  # pivots data longer so we can easily plot quadrat vs average % coverage for each organism/entity
+  pivot_longer(cols = c(bare_rock, algae,mussels,small_barnacles,large_barnacles,gooseneck_barnacles),
+               names_to = "entity",
+               values_to = "avg_coverage")
+
+view(tidal_summary)
+```
+
+This is just to check that the levels are exactly as we want them to be:
+
+```{r}
+# looks at levels of quadrat
+levels(tidal_summary$quadrat)
+```
+
+# Plot
+
+Before plotting, I am going to change the organism names back to their original names just for the sake of the plot looking clean.
+```{r}
+# replaces all underscores with spaces for nice looking legend items
+tidal_summary <- tidal_summary %>% 
+  mutate(entity = str_replace_all(entity, pattern = "_", replacement = " "))
+
+```
+
+Here we will now plot our summary intertidal data
+```{r, TidalPlot, fig.align = "center",fig.cap = "This plot shows the average percent coverage of each organism (and bare rock) on rocks at each tide height (Low, Mid, High) at Carpinteria, across all transects measured."}
+# Generates plot
+TidalPlot <- ggplot(data = tidal_summary, 
+                    mapping = aes(x = quadrat,
+                                  y = avg_coverage,
+                                  fill = entity))+
+  
+  geom_bar(position = "dodge", stat = "identity")+ # specifies bar plot
+  
+  # specifies labels of plot elements
+  labs(x = "Tide Height at each Quadrat",
+       y = "Average Percent (%) Coverage",
+       fill = "Entity/Organism",
+       title = "Average Percent Coverage of each Organism
+at different Tide Levels in Carpinteria")+
+  
+  # color-blind friendly colors
+  scale_fill_viridis_d()+
+  
+  # specifies color of plot elements
+  theme(panel.background = element_rect(fill = "lightskyblue1"),
+        text = element_text(color = "darkgreen"))
+  
+TidalPlot
+
+```
+
+###### Thanks for reading!
