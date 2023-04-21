@@ -91,7 +91,12 @@ tidal_summary <- tidal_clean %>%
   # pivots data longer so we can easily plot quadrat vs average % coverage for each organism/entity
   pivot_longer(cols = c(bare_rock, algae,mussels,small_barnacles,large_barnacles,gooseneck_barnacles),
                names_to = "entity",
-               values_to = "avg_coverage")
+               values_to = "avg_coverage") %>% 
+  
+  # replaces all underscores with spaces for nice looking legend items
+  mutate(entity = str_replace_all(entity, pattern = "_", replacement = " ")) %>% 
+  # makes each organism a factor so we can order them nicely on the plot
+  mutate(entity = factor(entity))
 
 view(tidal_summary)
 ```
@@ -105,21 +110,13 @@ levels(tidal_summary$quadrat)
 
 # Plot
 
-Before plotting, I am going to change the organism names back to their original names just for the sake of the plot looking clean.
-```{r}
-# replaces all underscores with spaces for nice looking legend items
-tidal_summary <- tidal_summary %>% 
-  mutate(entity = str_replace_all(entity, pattern = "_", replacement = " "))
-
-```
-
 Here we will now plot our summary intertidal data
 ```{r, TidalPlot, fig.align = "center",fig.cap = "This plot shows the average percent coverage of each organism (and bare rock) on rocks at each tide height (Low, Mid, High) at Carpinteria, across all transects measured."}
 # Generates plot
 TidalPlot <- ggplot(data = tidal_summary, 
                     mapping = aes(x = quadrat,
                                   y = avg_coverage,
-                                  fill = entity))+
+                                  fill = fct_reorder(entity, avg_coverage, .desc = TRUE)))+ # re-orders entity by descending average coverage
   
   geom_bar(position = "dodge", stat = "identity")+ # specifies bar plot
   
