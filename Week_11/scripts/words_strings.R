@@ -271,7 +271,7 @@ sent_word_counts <- tidy_books %>%
 sent_word_counts %>%
   filter(n > 150) %>% # take only if there are over 150 instances of it
   mutate(n = ifelse(sentiment == "negative", -n, n)) %>% # add a column where if the word is negative make the count negative
-  mutate(word = reorder(word, n)) %>% # sort it so it gows from largest to smallest
+  mutate(word = reorder(word, n)) %>% # sort it so it goes from largest to smallest
   ggplot(aes(word, n, fill = sentiment)) +
   geom_col() +
   coord_flip() +

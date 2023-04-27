@@ -1,0 +1,162 @@
+---
+title: 'Homework: For Loops & Purrr'
+author: "Marisa Mackie"
+date: "`r Sys.Date()`"
+output: 
+  prettydoc::html_pretty:
+    toc: TRUE
+    theme: cayman
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Introduction
+In this document I will:
+
+* Bring in all 4 files
+
+* Calculate the mean and standard deviation of both temperature (Temp.C) and light (Intensity.lux) for each tide pool. 
+
+* Use both a for loop and map() functions
+
+
+## Load Libraries
+```{r}
+# Load libraries
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+
+## For loop approach:
+
+I will first do each of these steps individually, and then I will construct my For loop.
+
+#### Read in the data for 1 file
+
+First, let's read in one of the data files and take a look at it.
+
+```{r}
+# read in first data file
+TP1 <- read_csv(here("Week_12","data","Homework","TP1.csv"))
+
+glimpse(TP1)
+```
+
+#### Clean the names
+
+Uh oh. It looks like one of our variable names have special characters like periods "." in them, which can make it harder to work with. Let's change those periods "." to underscores "_"
+
+An easy way to do this is to use the **clean_names()** function in the **Janitor** package.
+
+```{r}
+TP1_clean <- TP1 %>% 
+  clean_names() # cleans column names by converting them to snake_Case
+
+glimpse(TP1_clean)
+```
+#### For Loop:
+
+Let's first read in all the data files.
+```{r}
+pool_path <-here ("Week_12", "data", "homework")
+
+# lists all the files in the path that contain ".csv"
+TPfiles <- dir(path = pool_path, pattern = ".csv")
+TPfiles
+```
+
+
+Let's pre-allocate space so that our For loop can store the output somewhere.
+
+```{r}
+# creates empty dataframe where number of rows = number of files, and has 3 columns
+pool_data <- data.frame(matrix(nrow = length(TPfiles), ncol = 5))
+
+# gives column names to the pool_data dataframe
+colnames(pool_data)<-c("filename","mean_temp","stdev_temp","mean_light","stdev_light")
+
+pool_data
+```
+
+
+Now that we have this, let's create our For loop to do this for all the files!
+
+```{r}
+for(i in 1:length(TPfiles)){ # loops from 1st to last file in pool_data
+  # reads in files, pastes path with / to file name
+  file_data <- read_csv(paste0(pool_path, "/", TPfiles[i])) %>% 
+    clean_names() # cleans the names, converts to snake_case
+  
+  # gets the filename based on the current file
+  pool_data$filename[i] <- TPfiles[i]
+  
+  # calculates mean temp for current file
+  pool_data$mean_temp[i] <- mean(file_data$temp_c, na.rm = TRUE)
+  
+  # calculates mean light intensity for current file
+  pool_data$mean_light[i] <- mean(file_data$intensity_lux, na.rm = TRUE)
+  
+  # calculates std deviation for temp for current file
+  pool_data$stdev_temp[i] <- sd(file_data$temp_c, na.rm = TRUE)
+  
+  # calculates std deviation for light intensity for current file
+  pool_data$stdev_light[i] <- sd(file_data$intensity_lux, na.rm = TRUE)
+}
+
+pool_data
+```
+
+
+## Map functions approach:
+
+Now we will do the same thing using map functions!
+
+```{r}
+# sets path
+pool_path <- here("Week_12", "data", "homework")
+
+# lists all the files in the path that contain ".csv"
+TPfiles <- dir(path = pool_path, pattern = ".csv", full.names = TRUE)
+
+# calculates mean & std deviation of temperature & light for each file
+TP_summary <- TPfiles %>%
+  
+  set_names() %>% # set the id of each list to the filename
+  
+  map_df(read_csv,.id = "filename") %>% # maps it to a dataframe and puts ID in column "filename"
+  
+  clean_names() %>% 
+  
+  group_by(filename) %>% # groups by filename
+  
+  # calculates mean of temp & light intensity, dropping NAs
+  summarize(mean_temp = mean(temp_c, na.rm = TRUE),
+            stdev_temp = sd(temp_c, na.rm = TRUE),
+            mean_light = mean(intensity_lux, na.rm = TRUE),
+            stdev_light = sd(intensity_lux, na.rm = TRUE)) %>% 
+  
+  # renames the filenames to only include the last 7 characters, i.e., TPn.csv
+  mutate(filename = str_sub(filename, start = -7))
+
+
+TP_summary
+```
+
+## Check for accuracy
+
+Let's compare them to make sure they are correct:
+
+```{r}
+glimpse(pool_data)
+glimpse(TP_summary)
+```
+Looks good!
+
+
+###### Thanks for reading!
